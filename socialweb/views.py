@@ -1,8 +1,8 @@
 from django.shortcuts import render,redirect
-from django.views.generic import View,CreateView,FormView,TemplateView,ListView
-from socialweb.forms import RegistrationForm,LoginForm,UserprofileForm,PostForm
+from django.views.generic import View,CreateView,FormView,TemplateView,ListView,UpdateView
+from socialweb.forms import RegistrationForm,LoginForm,UserprofileForm,PostForm,CommentForm
 from django.contrib.auth.models import User
-from django.contrib.auth import authenticate,login
+from django.contrib.auth import authenticate,login,logout
 from api.models import Userprofile,Post
 from django.urls import reverse_lazy
 from api.models import Post,Comments
@@ -42,36 +42,34 @@ class LoginView(FormView):
             else:
                  return render(request,"login.html",{"form":form})
 
-class HomeView(View):
-    def get(self,request,*args,**kwargs):
-        Post.objects.all()
-        return render(request,"base.html")
-
-class ProfileCreateView(View):
-    def get(self,request,*args,**kwargs):
-        form=UserprofileForm()
-        return render(request,"userprofile.html",{"form":form})
-
-    def post(self,request,*args,**kwargs):
-        form=UserprofileForm(request.POST,files=request.FILES)
-        if form.is_valid():
-            usr=User.objects.get(username=request.user.username)
-            form.instance.user=usr
-            form.save()
-            return redirect("profile_detail")
-        else:
-            return render(request,"userprofile.html",{"form":form})
-
-class UserprofileView(CreateView,ListView):
+class HomeView(CreateView,ListView):
     model=Post
     form_class=PostForm
-    template_name="profile_detail.html"
-    success_url=reverse_lazy("profile_detail")
+    template_name="index.html"
+    success_url=reverse_lazy("home")
     context_object_name="posts"
 
     def form_valid(self, form):
-        form.instance.user=self.request.user 
+        form.instance.user=self.request.user
         return super().form_valid(form)
+    
+    def get_queryset(self):
+        return Post.objects.all().order_by("-date")
+
+class ProfileCreateView(CreateView):
+    model=Userprofile
+    form_class=UserprofileForm
+    template_name="userprofile.html"
+    success_url=reverse_lazy("profile_detail")
+
+    def form_valid(self, form):
+        form.instance.user=self.request.user
+        return super().form_valid(form)
+    
+
+class UserprofileView(TemplateView):
+    template_name="profile_detail.html"
+    
 
     # def get(self,request,*args,**kwargs):
     #     qs=Userprofile.objects.filter(user=request.user)
@@ -80,8 +78,57 @@ class UserprofileView(CreateView,ListView):
 class AddCommentView(View):
     def post(self,request,*args,**kwargs):
         pid=kwargs.get("id")
-        po=Comments.objects.get(id=pid)
-        com=request.POST.get("comments")
-        Comments.objects.create(post=po,comment=com)
-        return redirect("profile_detail")
+        pos=Post.objects.get(id=pid)
+        usr=request.user
+        com=request.POST.get("comment")
+        Comments.objects.create(user=usr,post=pos,comment=com)
+        return redirect("home")
         
+    
+class ProfileUpdateView(UpdateView):
+    model=Userprofile
+    form_class=UserprofileForm
+    template_name="profile-change.html"
+    success_url=reverse_lazy("home")
+    pk_url_kwarg="id"
+
+class UpvoteView(View):
+    def get(self,request,*args,**kwargs):
+        id=kwargs.get("id")
+        po=Post.objects.get(id=id)
+        po.upvote.add(request.user)
+        po.save()
+        return redirect("home")
+    
+class PostDeleteView(View):
+    def get(self,request,*args,**kwargs):
+        id=kwargs.get("id")
+        Post.objects.get(id=id).delete()
+        return redirect("home")
+    
+class SignoutView(View):
+    def get(self,request,*args,**kwargs):
+        logout(request)
+        return redirect("signin")
+
+class UpvoteRemoveView(View):
+    def get(self,request,*args,**kwargs):
+        id=kwargs.get("id")
+        po=Post.objects.get(id=id)
+        po.upvote.remove(request.user)
+        po.save()
+        return redirect("home")    
+    
+class Commentupvoteview(View):
+    def get(self,request,*args,**kwargs):
+        id=kwargs.get("id")
+        co=Comments.objects.get(id=id)
+        co.upvote.add(request.user)
+        co.save()
+        return redirect("home")
+    
+class CommentdeleteView(View):
+    def get(self,request,*args,**kwargs):
+        id=kwargs.get("id")
+        Comments.objects.get(id=id).delete()
+        return redirect ("home")
