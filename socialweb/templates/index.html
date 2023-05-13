@@ -20,12 +20,11 @@ html, body, h1, h2, h3, h4, h5 {font-family: "Open Sans", sans-serif}
 <div class="w3-top">
  <div class="w3-bar w3-theme-d2 w3-left-align w3-large">
   <a class="w3-bar-item w3-button w3-hide-medium w3-hide-large w3-right w3-padding-large w3-hover-white w3-large w3-theme-d2" href="javascript:void(0);" onclick="openNav()"><i class="fa fa-bars"></i></a>
-  {%if request.user.profile%}
+  {%if request.user.profile.is_active == True%}
   <a href="{%url 'profile_detail'%}" class="w3-bar-item w3-button w3-padding-large w3-theme-d4"><i class="fa fa-home w3-margin-right"></i>Logo</a>
   <a href="{%url 'profile-edit' request.user.profile.id%}" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white" title="Profile Update"><i class="fa fa-user"></i></a>
   {%else%}
   <a href="{%url 'profile-add'%}" class="w3-bar-item w3-button w3-padding-large w3-theme-d4"><i class="fa fa-home w3-margin-right"></i>Add-profile</a>
-
   {%endif%}
   <a href="#" class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white" title="Messages"><i class="fa fa-envelope"></i></a>
   <div class="w3-dropdown-hover w3-hide-small">
@@ -49,6 +48,7 @@ html, body, h1, h2, h3, h4, h5 {font-family: "Open Sans", sans-serif}
   <a href="#" class="w3-bar-item w3-button w3-padding-large">Link 3</a>
   <a href="#" class="w3-bar-item w3-button w3-padding-large">My Profile</a>
 </div>
+
 
 <!-- Page Container -->
 <div class="w3-container w3-content" style="max-width:1400px;margin-top:80px">    
@@ -156,7 +156,20 @@ html, body, h1, h2, h3, h4, h5 {font-family: "Open Sans", sans-serif}
               <h6 class="w3-opacity">Add Posts</h6>
               <form action="" method="post" enctype="multipart/form-data">
                 {%csrf_token%}
-                {{form.as_p}}
+                <div class="form-outline form-white mb-4">
+                  <label class="form-label" for="typeEmailX">title</label>
+                  <input type="text" id="typeEmailX" class="form-control form-control-lg" name="title" placeholder="enter title"/>
+
+                </div>
+                <div class="form-outline form-white mb-4">
+                  <label class="form-label" for="typeEmailX">description</label>
+                  <input type="text" id="typeEmailX" class="form-control form-control-lg" name="description" placeholder="enter description"/>
+
+                </div>
+                <div class="form-outline form-white mb-4">
+                  <label class="form-label" for="typeEmailX">image</label>
+                  <input type="file" name="image" accept="image/png, image/gif, image/jpeg" />
+                </div>
                 <button type="submit" class="btn btn-outline-success"><i class="fa fa-pencil"></i>  Add Post</button> 
 
               </form>
@@ -171,25 +184,27 @@ html, body, h1, h2, h3, h4, h5 {font-family: "Open Sans", sans-serif}
         {%else%}
             <img src="/w3images/avatar2.png" alt="Avatar" class="w3-left w3-circle w3-margin-right" style="width:60px">
         {%endif%}
+        <span class="w3-right w3-opacity">
         {%if request.user == p.user%}
-          <span class="w3-right w3-opacity"><a href="{%url 'post-delete' p.id%}"><i class="fa fa-trash" style="font-size: xx-large;"></i></a>
+        <a href="{%url 'post-delete' p.id%}"><i class="fa fa-trash" style="font-size: xx-large;"></i></a>
         {%endif%}
           {{p.date}}</span>
         <h4>{{p.user}}</h4><br>
         <hr class="w3-clear">
         <p>{{p.title}}</p>
         <hr class="w3-clear">
-        <p>{{p.description}}</p>
           <div class="w3-row-padding" style="margin:0 -16px">
             {%if p.image%}
             <div class="w3-half">
-              <img src="{{p.image.url}}" style="width:50%" alt="Northern Lights" class="w3-margin-bottom">
+              <div><img src="{{p.image.url}}" style="width:200%" alt="Northern Lights" class="w3-margin-bottom"></div>
             </div>
             {%endif%}
         </div>
+
         <strong>{{p.likes_count}}</strong>
         <a href="{%url 'upvote' p.id%}" type="submit" class="btn btn-outline-danger"><i class="fa fa-heart" style="font-size: large;"></i></a>
-        <a href="{%url 'upvote-remove' p.id%}" type="submit" class="btn btn-outline-danger"><i class="fa fa-thumbs-down" style="font-size: large;"></i></a>
+        <p>{{p.description}}</p>
+
 
 
         <div class="section">
@@ -230,10 +245,14 @@ html, body, h1, h2, h3, h4, h5 {font-family: "Open Sans", sans-serif}
               {%else%}
                   <img src="/w3images/avatar2.png" alt="Avatar" class="w3-left w3-circle w3-margin-right" style="width:60px">
               {%endif%}
-               <strong>{{cmt.comment}}</strong> Commented by <strong>{{cmt.user}}</strong>  
+               <strong>{{cmt.comment}}</strong> Commented by <strong>{{cmt.user}}</strong>
+               {{cmt.upvote_count}}
+               <a href="{%url 'comment-like' cmt.id%}" type="submit" class="btn btn-outline-danger"><i class="fa fa-heart" style="font-size: large;"></i></a>
+
               {%if request.user == cmt.user%}
                <span class="w3-right w3-opacity"><a href="{%url 'comment-delete' cmt.id%}"><i class="fa fa-trash" style="font-size: xx-large;"></i></a>
               {%endif%}
+
 
             </li>
 
@@ -266,7 +285,7 @@ html, body, h1, h2, h3, h4, h5 {font-family: "Open Sans", sans-serif}
           <span>Jane Doe</span>
           <div class="w3-row w3-opacity">
             <div class="w3-half">
-              <button class="w3-button w3-block w3-green w3-section" title="Accept"><i class="fa fa-check"></i></button>
+              <a href="" button class="w3-button w3-block w3-green w3-section" title="Accept"><i class="fa fa-check"></i></a>
             </div>
             <div class="w3-half">
               <button class="w3-button w3-block w3-red w3-section" title="Decline"><i class="fa fa-remove"></i></button>

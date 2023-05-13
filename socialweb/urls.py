@@ -15,8 +15,9 @@ urlpatterns= [
     path("posts/<int:id>/upvote/add",views.UpvoteView.as_view(),name="upvote"),
     path("posts/<int:id>/remove",views.PostDeleteView.as_view(),name="post-delete"),
     path("signout",views.SignoutView.as_view(),name="signout"),
-    path("posts/<int:id>/upvote/remove",views.UpvoteRemoveView.as_view(),name="upvote-remove"),
     path("profile/add",views.ProfileCreateView.as_view(),name="profile-add"),
     path("comments/<int:id>/upvote/add",views.Commentupvoteview.as_view(),name="comment-like"),
-    path("comments/<int:id>/remove",views.CommentdeleteView.as_view(),name="comment-delete")
+    path("comments/<int:id>/remove",views.CommentdeleteView.as_view(),name="comment-delete"),
+    path("userprofile/<int:id>/remove",views.Profiledeleteview.as_view(),name="profile-remove"),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

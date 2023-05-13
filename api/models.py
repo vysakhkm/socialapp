@@ -30,6 +30,11 @@ class Userprofile(models.Model):
     bio=models.CharField(max_length=300)
     time_line_pic=models.ImageField(upload_to="images",null=True)
     user=models.OneToOneField(User,on_delete=models.CASCADE,related_name="profile")
+    friend=models.ManyToManyField(User,blank=True)
+    is_active=models.BooleanField(default=True)
+
+   
+
 
 class Comments(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
@@ -39,6 +44,9 @@ class Comments(models.Model):
 
     def __str__(self):
         return self.post
-
-  
     
+  
+    @property
+    def upvote_count(self):
+        return self.upvote.all().count()
+
